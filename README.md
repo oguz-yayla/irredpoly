@@ -1,8 +1,6 @@
 # irredpoly
-The number of irreducible polynomials over finite fields with vanishing trace and reciprocal trace
 
-
-This repository consists of the verification source code written in MAGMA for the paper "The number of irreducible polynomials over finite fields with vanishing trace and reciprocal trace".
+This repository consists of the verification source code written in MAGMA for the paper "The number of irreducible polynomials over finite fields with vanishing trace and reciprocal trace" avaliable in https://arxiv.org/abs/2005.09402.
 
 
 Abstract:

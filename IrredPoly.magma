@@ -1,0 +1,135 @@
+//The quotient group F_q*/F_p*
+function quotientset(Fq,Fp);
+    quoset:={};
+	setq:=Set(Fq);
+	Exclude(~setq, 0);
+	for a in setq do;   
+        Include(~quoset,a);
+        setp:=Set(Fp);
+        Exclude(~setp, 0);
+		for b in setp do;
+			Exclude(~setq, a*b);
+            if IsEmpty(setq) then;
+                return quoset;
+            end if;
+		end for;
+	end for;
+end function;
+
+//The sequence of L polynomails of Curve C over F_q, q=p^r
+//C:=Curve(PK,X*Y^p-X*Y*Z^(p-1)-a*b*X^2*Z^(p-1)+b*Z^(p+1))
+function LpolyArray(p,q);
+	A:=[];
+	F := GF(q);
+	P<X,Y,Z>:= PolynomialRing(F,3);
+	PK:=ProjectiveSpace(P);
+	Fstar:=Exclude(Set(F),0);
+    Fstar:=SetToIndexedSet(Fstar);
+	QS:=quotientset(F,GF(p));
+    QS:=SetToIndexedSet(QS);
+	for i in [1..#Fstar] do;
+		A[i]:=[];
+        a:=Fstar[i];
+		for j in [1..#QS] do;
+            b:=QS[j];
+			C:=Curve(PK,X*Y^p-X*Y*Z^(p-1)-a*b*X^2*Z^(p-1)+b*Z^(p+1));
+			A[i][j]:=Roots(LPolynomial(C: Al:="Naive"),ComplexField());
+		end for;
+	end for;
+	return A;
+end function;
+
+//To save time the array of L-polynomials are computed globally.
+time L:=LpolyArray(3,9);
+
+
+// The number of elements in F_q with vanishing trace and reciprocal trace for q=2^r,
+// that is p=2.
+function F2(p,q,n);
+	F := GF(q);
+	S :=0;
+	K:=GF(q^n);
+	P<X,Y,Z>:= PolynomialRing(K,3);
+	PK:=ProjectiveSpace(P);
+	for a in F do;
+		if a ne 0 then;
+			C:=Curve(PK,X*Y^2+X*Y*Z+a*X^2*Z+Z^3);
+			pt := C![0, 1, 0];
+			E:= EllipticCurve(C, pt);
+			s:=Order(E)-q^n;
+			S:= S+s;
+		end if;
+	end for;
+	return Round(q^(n-2)+(q-1)*S/q^2);
+end function;
+
+// The number of elements in F_q with vanishing trace and reciprocal trace for q=p^r, p>2.
+function Fq(p,q,n)
+	S:=0;
+	F := GF(q);
+	Fstar:=Exclude(Set(F),0);
+    Fstar:=SetToIndexedSet(Fstar);
+	QS:=quotientset(F,GF(p));
+    QS:=SetToIndexedSet(QS);
+	for i in [1..#Fstar] do;
+        a:=Fstar[i];
+		for j in [1..#QS] do;
+            b:=QS[j];
+            for r in L[i][j] do;
+            	S-:=r[2]*r[1]^(-n);
+            end for;
+		end for;
+	end for;
+	return Round(q^(n-2)+((q-1)^2+S)/q^2);
+end function;
+
+
+// The number of polynomials over F_q  of degree n with vanishing trace and reciprocal trace.
+function Iq(p,q,n)
+	F := GF(q);
+	sum:=0;
+	for d in Divisors(n) do;
+		if IsDivisibleBy(d,p) eq false then;
+			if p eq 2 then;
+				A:=F2(2,q,Integers()!(n/d));
+			else;
+				A:=Fq(p,q,Integers()!(n/d));
+			end if;
+			if IsDivisibleBy(n,p) eq true then;
+				sum+:=MoebiusMu(d)*(A-q^(n/(p*d)));
+			else;
+				sum+:=MoebiusMu(d)*A;
+			end if;
+		end if;
+	end for;
+	return Round(sum/n);
+end function;
+
+// The number of polynomials over F_q  of degree n with vanishing trace and reciprocal trace by echaustive counting.
+function ExCounting(q,n);
+	A:=[];
+	F:=GF(q);
+	P<x>:=PolynomialRing(F);
+	FC:=CartesianPower(F,n-3);
+	for fc in FC do;
+		fcx:=0;
+		for i in [1..n-3] do;
+			fcx+:=fc[i]*x^(i+1);
+		end for;
+		for m in F do;
+			f:=x^n+fcx+m;
+			if IsIrreducible(f) eq true then;
+				A:=Append(A,f);
+			end if;
+		end for;
+	end for;
+	return #A;
+end function;
+
+p:=3;
+q:=9;
+for n in [3..8] do;
+	n;
+	time ExCounting(q,n);
+	time Iq(p,q,n);
+end for;

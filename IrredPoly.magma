@@ -119,7 +119,7 @@ function ExCounting(q,n);
 		for m in F do;
 			f:=x^n+fcx+m;
 			if IsIrreducible(f) eq true then;
-				A:=Append(A,f);
+				Append(~A,f);
 			end if;
 		end for;
 	end for;

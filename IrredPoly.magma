@@ -1,6 +1,6 @@
 //The quotient group F_q*/F_p*
 function quotientset(Fq,Fp);
-    quoset:={};
+    	quoset:={};
 	setq:=Set(Fq);
 	Exclude(~setq, 0);
 	for a in setq do;   
